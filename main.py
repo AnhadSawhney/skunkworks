@@ -1,12 +1,15 @@
-import machine_email
+#import machine_email
 import settings
 import transactions
 from sys import platform
 from time import sleep
 from threading import Thread
+from PIL import Image, ImageDraw, ImageFont
 
 VALVE_OPEN_TIME = 10
 NUM_PIXELS = 24
+
+#font = ImageFont.truetype("DejaVuSans.ttf", 24)
 
 if platform == 'linux':
     import board
@@ -15,6 +18,8 @@ if platform == 'linux':
     from adafruit_rgb_display.rgb import color565
     from adafruit_rgb_display import st7789
     pixels = neopixel.NeoPixel(board.D18, NUM_PIXELS)
+else:
+    pass
 
 def main():
     t = Thread(target=idle_animation)
@@ -47,24 +52,24 @@ def piTFT_setup():
     buttonA.switch_to_input()
     buttonB.switch_to_input()
 
-def test_display():
-    if buttonA.value and buttonB.value:
-        backlight.value = False  # turn off backlight
-    else:
-        backlight.value = True  # turn on backlight
-    if buttonB.value and not buttonA.value:  # just button A pressed
-        display.fill(color565(255, 0, 0))  # red
-    if buttonA.value and not buttonB.value:  # just button B pressed
-        display.fill(color565(0, 0, 255))  # blue
-    if not buttonA.value and not buttonB.value:  # none pressed
-        display.fill(color565(0, 255, 0))  # green
+# def test_display():
+#     if buttonA.value and buttonB.value:
+#         backlight.value = False  # turn off backlight
+#     else:
+#         backlight.value = True  # turn on backlight
+#     if buttonB.value and not buttonA.value:  # just button A pressed
+#         display.fill(color565(255, 0, 0))  # red
+#     if buttonA.value and not buttonB.value:  # just button B pressed
+#         display.fill(color565(0, 0, 255))  # blue
+#     if not buttonA.value and not buttonB.value:  # none pressed
+#         display.fill(color565(0, 255, 0))  # green
 
 def idle_animation():
     while True:
         for j in range(255):
             for i in range(NUM_PIXELS):
                 pixel_index = (i * 256 // NUM_PIXELS) + j
-                pixels[i] = wheel(pixel_index & 255)
+                pixels.setPixelColor(i, wheel(pixel_index & 255))
             pixels.show()
             sleep(10)
 
