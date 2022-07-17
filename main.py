@@ -1,6 +1,7 @@
 #import machine_email
 import settings
 import transactions
+import animatedGIF
 from sys import platform
 from time import sleep
 from threading import Thread
@@ -24,6 +25,7 @@ else:
     pixels.begin()
 
 def main():
+    logo = animatedGIF.AnimatedGif()
     t = Thread(target=idle_animation)
     t.start()
 
