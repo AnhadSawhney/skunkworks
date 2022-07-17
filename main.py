@@ -19,7 +19,9 @@ if platform == 'linux':
     from adafruit_rgb_display import st7789
     pixels = neopixel.NeoPixel(board.D18, NUM_PIXELS)
 else:
-    pass
+    import neopixelEmulator as ne
+    pixels = ne.Neopixel_Emulator(NUM_PIXELS)
+    pixels.begin()
 
 def main():
     t = Thread(target=idle_animation)
@@ -71,14 +73,15 @@ def idle_animation():
                 pixel_index = (i * 256 // NUM_PIXELS) + j
                 pixels.setPixelColor(i, wheel(pixel_index & 255))
             pixels.show()
-            sleep(10)
+            sleep(0.03)
 
 def dispense_drink():
     open_valve()
     for i in range(256): #change to number of LEDs in ring
-        # animation: fill in the ring less and less as time runs out and fade from green to red  
+        # animation: fill in the ring less and less as time runs out and fade from green to red 
         pixels.fill((i, 255 - i, 0)) # r, g, b
-        pixels[0:i/255*NUM_PIXELS] = (0, 0, 0)
+        for i in range(i/255*NUM_PIXELS, NUM_PIXELS):
+            pixels.setPixelColor(i, (0,0,0))
         pixels.show()
         sleep(VALVE_OPEN_TIME / 255)
     close_valve()
