@@ -1,6 +1,7 @@
 import tkinter as tk
 from PIL import Image, ImageTk
 import threading, time
+import animatedGIF
 
 #display.image(frame_object.image)
 
@@ -8,28 +9,38 @@ class DisplayEmulator:
     def __init__(self):
         self.width = 240
         self.height = 135
-        self.root = tk.Tk() #tk.Toplevel()
-        self.root.title('Raspberry Pi TFT')
-        self.root.geometry('{}x{}'.format(self.width, self.height))
-        self.label = tk.Label(self.root)
-        self.label.pack()
         self.keep_looping = True
-        self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
+        self.new_image_ready = False
         self.t = threading.Thread(target=self.loop)
         self.t.start()
+        self.current_image = None
 
     def loop(self):
         print("Display Emulator Loop Start!")
+        root = tk.Tk() #tk.Toplevel()
+        root.title('Raspberry Pi TFT')
+        root.geometry('{}x{}'.format(self.width, self.height))
+        label = tk.Label(root)
+        label.pack()
+        root.protocol("WM_DELETE_WINDOW", self.on_closing)
+
         while self.keep_looping:
-            self.root.update()
+            if self.new_image_ready:
+                self.new_image_ready = False
+                im = ImageTk.PhotoImage(self.current_image) # THIS MUST BE SAVED AS ITS OWN VARIABLE OTHERWISE IT GETS GARBAGE COLLECTED BEFORE IT GETS TO THE SCREEN
+                label.config(image=im)
+                label.pack()
+                root.update()
+
+            #self.root.update()
             time.sleep(0.05)
 
     def image(self, frame):
-        self.label.config(image=ImageTk.PhotoImage(frame))
-        self.label.pack()
-        self.root.update()
+        self.current_image = frame
+        self.new_image_ready = True
 
     def on_closing(self): 
         self.root.destroy()
         self.keep_looping = False 
         #self.t.join()
+

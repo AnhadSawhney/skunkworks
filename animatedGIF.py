@@ -1,6 +1,7 @@
 from PIL import Image, ImageOps
 import os
 import time
+import displayEmulator
 
 class Frame:
     def __init__(self, duration=0):
@@ -38,20 +39,22 @@ class AnimatedGif:
             self.loop = 1
         self.framecount = image.n_frames
         self.frames.clear()
-        for frame in range(self.framecount):
-            image.seek(frame)
+        for i in range(self.framecount):
+            image.seek(i)
             # Create blank image for drawing.
             # Make sure to create image with mode 'RGB' for full color.
             frameobject = Frame(duration=self.duration)
             if "duration" in image.info:
                 frameobject.duration = image.info["duration"]
-            frameobject.image = ImageOps.pad(  # pylint: disable=no-member
-                image.convert("RGB"),
-                (self.width, self.height),
-                method=Image.Resampling.NEAREST,
-                color=(0, 0, 0),
-                centering=(0.5, 0.5),
-            )
+            #frameobject.image = ImageOps.pad(  # pylint: disable=no-member
+            #    image.convert("RGB"),
+            #    (self.width, self.height),
+            #    method=Image.Resampling.NEAREST,
+            #    color=(0, 0, 0),
+            #    centering=(0.5, 0.5),
+            #)
+            frameobject.image = image.copy() #image.convert("RGB")
+            #frameobject.image.show()
             self.frames.append(frameobject)
 
     def play(self):
@@ -73,3 +76,12 @@ class AnimatedGif:
 
         return frame.duration
 
+if __name__ == '__main__':
+    display = displayEmulator.DisplayEmulator()
+    logo = AnimatedGif(display)
+    logo.preload("out.gif")
+
+    while True:
+        #print('loop')
+        logo.postFrame()
+        time.sleep(0.1)
