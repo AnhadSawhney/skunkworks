@@ -1,54 +1,35 @@
 import tkinter as tk
 from PIL import Image, ImageTk
+import threading, time
 
-#self.display.image(frame_object.image)
+#display.image(frame_object.image)
 
-class DisplayEmulator(Label):
-    def __init__(self, master, filename):
-        im = Image.open(filename)
-        seq =  []
-        try:
-            while 1:
-                seq.append(im.copy())
-                im.seek(len(seq)) # skip to next frame
-        except EOFError:
-            pass # we're done
+class DisplayEmulator:
+    def __init__(self):
+        self.width = 240
+        self.height = 135
+        self.root = tk.Tk() #tk.Toplevel()
+        self.root.title('Raspberry Pi TFT')
+        self.root.geometry('{}x{}'.format(self.width, self.height))
+        self.label = tk.Label(self.root)
+        self.label.pack()
+        self.keep_looping = True
+        self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
+        self.t = threading.Thread(target=self.loop)
+        self.t.start()
 
-        try:
-            self.delay = im.info['duration']
-        except KeyError:
-            self.delay = 100
+    def loop(self):
+        print("Display Emulator Loop Start!")
+        while self.keep_looping:
+            self.root.update()
+            time.sleep(0.05)
 
-        first = seq[0].convert('RGBA')
-        self.frames = [ImageTk.PhotoImage(first)]
+    def image(self, frame):
+        self.label.config(image=ImageTk.PhotoImage(frame))
+        self.label.pack()
+        self.root.update()
 
-        Label.__init__(self, master, image=self.frames[0])
-
-        temp = seq[0]
-        for image in seq[1:]:
-            temp.paste(image)
-            frame = temp.convert('RGBA')
-            self.frames.append(ImageTk.PhotoImage(frame))
-
-        self.idx = 0
-
-        self.cancel = self.after(self.delay, self.play)
-
-    def play(self):
-        self.config(image=self.frames[self.idx])
-        self.idx += 1
-        if self.idx == len(self.frames):
-            self.idx = 0
-        self.cancel = self.after(self.delay, self.play)        
-
-
-root = Tk()
-anim = MyLabel(root, 'animated.gif')
-anim.pack()
-
-def stop_it():
-    anim.after_cancel(anim.cancel)
-
-Button(root, text='stop', command=stop_it).pack()
-
-root.mainloop()
+    def on_closing(self): 
+        self.root.destroy()
+        self.keep_looping = False 
+        #self.t.join()

@@ -7,14 +7,32 @@
 import sys, math, time
 #sys.path.append('/usr/local/lib/python3.5/dist-packages/pygame-1.9.4.dev0-py3.5-linux-i686.egg')
 
-import pygame
+import tkinter as tk
+import threading
+#import pygame
 
-def Color(red, green, blue, white = 0):
+def _from_rgb(rgb):
+    """translates an rgb tuple of int to a tkinter friendly color code
+    """
+    r, g, b = rgb
+    return f'#{r:02x}{g:02x}{b:02x}'
+
+
+def RGBtoInt(red, green, blue, white = 0):
 	"""Convert the provided red, green, blue color to a 24-bit color value.
 	Each color component should be a value 0-255 where 0 is the lowest intensity
 	and 255 is the highest intensity.
 	"""
 	return (white << 24) | (red << 16)| (green << 8) | blue
+
+# convert a 24 bit rgbw color to rgb hex value
+def InttoHEX(c):
+    #print(hex(c))
+    c = hex(c).replace('0x', '#')#[:-2] # for white
+    while len(c) < 7:
+        c = c[0:3] + '0' + c[3:] #pad
+
+    return c
 
 class mock():
     WS2811_STRIP_RGB = 1
@@ -30,7 +48,6 @@ class Neopixel_Emulator(object):
         and real neopixel devices without changes.
 
     """
-        
     
     def __init__(self, num, pin=0, freq_hz=800000, dma=5, invert=False,
                 brightness=255, channel=0, strip_type=ws.WS2811_STRIP_RGB):
@@ -48,64 +65,78 @@ class Neopixel_Emulator(object):
         self.numLEDs = num
         
         #Set initial values
-        self._initialised = False
-        self._led_pos = []
-        self._led_data = []
-        self._height = 640
-        self._width = 640
-        
-        #Create initial LED array data structure
-        #for i in range(0,num):
-        #    self._led_pos.append( [0,0] )
-        #    self._led_data.append( [0,0,0,0] )
-        
-        #Initialise pygame
-        pygame.init()
+        self.initialized = True
+        self.led_pos = []
+        self.led_data = []
+        self.height = 640
+        self.width = 640
+        self.keep_looping = True
 
-        # Set the width and height of the screen [width,height]
-        size = [self._width, self._height]
-        self.screen = pygame.display.set_mode(size)
+        self.initialiseLEDCircle()
 
-        pygame.display.set_caption("Footleg's Neopixel Enumulator")
+        self.root = tk.Tk() #tk.Toplevel()
+        self.root.title('Neopixels')
+        self.root.geometry('{}x{}'.format(self.width, self.height))
 
         # Used to manage how fast the screen updates
-        self.clock = pygame.time.Clock()
+        #self.clock = pygame.time.Clock()
     
-        self.initialiseLEDCircle(num)
+        self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
+        self.canvas = tk.Canvas(self.root, height=self.height, width=self.width)
+        self.canvas.pack()
+        self.show()
+        self.t = threading.Thread(target=self.loop)
+        self.t.start()
         
     
-    def initialiseLEDCircle(self, num):
+    def initialiseLEDCircle(self):
         """ Set LED positions in a circle """
-        LEDsize = int( 20 / num ) + 10
-        radius = int( num * 10 )
+        #LEDsize = int( 20 / num ) + 10
+        radius = int(self.numLEDs * 10)
+
+        self.led_data = [0 for i in range(self.numLEDs)]
         
         #Position LEDs in a circle
-        for i in range(0,num):
-            angleRad = math.pi - (i * 2 * math.pi / num)
-            x = int( radius * math.sin( angleRad ) + self._width / 2 )
-            y = int( radius * math.cos( angleRad ) + self._height / 2 )
-            self._led_pos.append( [x,y] )
-            self._led_data.append((int(155 * i / num)+100,0,0))
+        for i in range(self.numLEDs):
+            angleRad = math.pi - (i * 2 * math.pi / self.numLEDs )
+            x = int( radius * math.sin( angleRad ) + self.width / 2 )
+            y = int( radius * math.cos( angleRad ) + self.height / 2 )
+            self.led_pos.append( [x,y] )
+            #self.setPixelColorRGB(i, int(155 * i / self.numLEDs )+100,0,0)
 
-        self.show()
-        
+    def loop(self):
+        print("Neopixel Emulator Loop Start!")
+        while self.keep_looping:
+            #self.show()
+            self.root.update()
+            time.sleep(0.05)
+
+    def on_closing(self):
+        self.root.destroy()
+        self.keep_looping = False  
+        #self.t.join() 
+
     def begin(self):
         """Initialize library, must be called once before other functions are
         called.
         """
-        self._initialised = True
-        
+        self.initialized = True        
 
     def show(self):
         """Update the display with the data from the LED buffer."""
-        if self._initialised:
+        if self.initialized:
             # Update the screen 
-            for i in range(len(self._led_pos)):
-                pygame.draw.circle(self.screen, self._led_data[i], self._led_pos[i], 10)
+            for i in range(self.numLEDs):
+                #pygame.draw.circle(self.screen, self.led_data[i], self.led_pos[i], 10)
+                x = self.led_pos[i][0]
+                y = self.led_pos[i][1]
+                self.canvas.create_rectangle(x, y, x+10, y+10, fill=InttoHEX(self.led_data[i]))
 
-            #print(self._led_data)
+            #print(self.led_data)
 
-            pygame.display.flip()
+            #pygame.display.flip()
+            self.canvas.pack()
+            self.root.update()
         else:
             #Throw error as begin method of class has not been called
             print("Error: Class begin method was not called")
@@ -114,20 +145,22 @@ class Neopixel_Emulator(object):
     def setPixelColor(self, n, color):
         """Set LED at position n to the provided 24-bit color value (in RGB order).
         """
-        self._led_data[n] = color
+        if len(color) > 2:
+            color = RGBtoInt(color[0], color[1], color[2])
+        self.led_data[n] = color
 
     # add a fill method to fill the entire led data list with the given color
     def fill(self, color):
         """Fill the whole LED display with the given color."""
-        for i in range(len(self._led_data)):
-            self._led_data[i] = color
+        for i in range(len(self.led_data)):
+            self.setPixelColor(i, color)
 
     def setPixelColorRGB(self, n, red, green, blue, white = 0):
         """Set LED at position n to the provided red, green, and blue color.
         Each color component should be a value from 0 to 255 (where 0 is the
         lowest intensity and 255 is the highest intensity).
         """
-        self.setPixelColor(n, Color(red, green, blue, white))
+        self.setPixelColor(n, RGBtoInt(red, green, blue, white))
         
 
     def setBrightness(self, brightness):
@@ -140,16 +173,16 @@ class Neopixel_Emulator(object):
         """Return an object which allows access to the LED display data as if 
         it were a sequence of 24-bit RGB values.
         """
-        return self._led_data
+        return self.led_data
     
 
     def numPixels(self):
         """Return the number of pixels in the display."""
-        return ws.ws2811_channel_t_count_get(self._channel)
+        return ws.ws2811_channel_t_count_get(self.channel)
 
     def getPixelColor(self, n):
         """Get the 24-bit RGB color value for the LED at position n."""
-        return self._led_data[n]
+        return self.led_data[n]
 
 
 def main():
@@ -166,24 +199,24 @@ def main():
     LED_STRIP      = ws.WS2811_STRIP_GRB   # Strip type and colour ordering
     
     # Create NeoPixel object with appropriate configuration.
-    strip = Neopixel_Emulator(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_CHANNEL, LED_STRIP)
+    strip = Neopixel_Emulator(LED_COUNT)
     
     # Intialize the library (must be called once before other functions).
     strip.begin()
 
-    keepRunning = True
-    while keepRunning == True :
-        for event in pygame.event.get(): # User did something
-            if event.type == pygame.QUIT: # If user clicked close
-                keepRunning = False # Flag that we are done so we exit this loop
-        for i in range(20):
-            strip.setPixelColor(0, (0,i*10,0))
-            strip.show()
-            time.sleep(0.1)
-            #print('a')
+    # keepRunning = True
+    # while keepRunning == True :
+    #     for event in pygame.event.get(): # User did something
+    #         if event.type == pygame.QUIT: # If user clicked close
+    #             keepRunning = False # Flag that we are done so we exit this loop
+    #     for i in range(20):
+    #         strip.setPixelColor(0, (0,i*10,0))
+    #         strip.show()
+    #         time.sleep(0.1)
+    #         #print('a')
 
         
-    pygame.quit()
+    #pygame.quit()
 
 
 if __name__ == '__main__':

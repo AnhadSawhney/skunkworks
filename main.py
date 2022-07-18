@@ -6,30 +6,30 @@ from sys import platform
 from time import sleep
 from threading import Thread
 from PIL import Image, ImageDraw, ImageFont
+import io
 
 VALVE_OPEN_TIME = 10
 NUM_PIXELS = 24
+emulate = False
 
 #font = ImageFont.truetype("DejaVuSans.ttf", 24)
 
-if platform == 'linux':
+def is_raspberrypi():
+    try:
+        with io.open('/sys/firmware/devicetree/base/model', 'r') as m:
+            if 'raspberry pi' in m.read().lower(): return True
+    except Exception: pass
+    return False
+
+if is_raspberrypi():
     import board
     import neopixel
     import digitalio
     from adafruit_rgb_display.rgb import color565
     from adafruit_rgb_display import st7789
     pixels = neopixel.NeoPixel(board.D18, NUM_PIXELS)
-else:
-    import neopixelEmulator as ne
-    pixels = ne.Neopixel_Emulator(NUM_PIXELS)
-    pixels.begin()
 
-def main():
-    logo = animatedGIF.AnimatedGif()
-    t = Thread(target=idle_animation)
-    t.start()
 
-def piTFT_setup():
     # Configuration for CS and DC pins for Raspberry Pi
     cs_pin = digitalio.DigitalInOut(board.CE0)
     dc_pin = digitalio.DigitalInOut(board.D25)
@@ -55,6 +55,25 @@ def piTFT_setup():
     buttonB = digitalio.DigitalInOut(board.D24)
     buttonA.switch_to_input()
     buttonB.switch_to_input()
+else:
+    #import tkinter as tk
+    #root = tk.Tk()
+    #root.withdraw()
+    import neopixelEmulator as ne
+    pixels = ne.Neopixel_Emulator(NUM_PIXELS)
+    pixels.begin()
+    import displayEmulator
+    display = displayEmulator.DisplayEmulator()
+    emulate = True
+
+logo = animatedGIF.AnimatedGif(display)
+
+def main():
+    logo.preload("out.gif")
+    idle_animation()
+    #t = Thread(target=idle_animation)
+    #t.start()
+    #t.join()
 
 # def test_display():
 #     if buttonA.value and buttonB.value:
@@ -69,13 +88,17 @@ def piTFT_setup():
 #         display.fill(color565(0, 255, 0))  # green
 
 def idle_animation():
+    j = 0
     while True:
-        for j in range(255):
-            for i in range(NUM_PIXELS):
-                pixel_index = (i * 256 // NUM_PIXELS) + j
-                pixels.setPixelColor(i, wheel(pixel_index & 255))
-            pixels.show()
-            sleep(0.03)
+        print("Idle Animation Loop")
+        for i in range(NUM_PIXELS):
+            pixel_index = (i * 256 // NUM_PIXELS) + j
+            pixels.setPixelColor(i, wheel(pixel_index & 255))
+        pixels.show()
+        logo.postFrame()
+        sleep(0.03)
+        if j > 255:
+            j = 0
 
 def dispense_drink():
     open_valve()
@@ -83,7 +106,7 @@ def dispense_drink():
         # animation: fill in the ring less and less as time runs out and fade from green to red 
         pixels.fill((i, 255 - i, 0)) # r, g, b
         for i in range(i/255*NUM_PIXELS, NUM_PIXELS):
-            pixels.setPixelColor(i, (0,0,0))
+            pixels.setPixelColor(i, 0, 0, 0)
         pixels.show()
         sleep(VALVE_OPEN_TIME / 255)
     close_valve()
