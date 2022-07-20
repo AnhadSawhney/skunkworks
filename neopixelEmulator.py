@@ -97,7 +97,7 @@ class Neopixel_Emulator(object):
         root.geometry('{}x{}'.format(self.width, self.height))
     
         root.protocol("WM_DELETE_WINDOW", self.on_closing)
-        canvas = tk.Canvas(root, height=self.height, width=self.width)
+        canvas = tk.Canvas(root, height=self.height, width=self.width, bg='black')
         canvas.pack()
         self.show()
 
@@ -109,7 +109,7 @@ class Neopixel_Emulator(object):
                     x = self.led_pos[i][0]
                     y = self.led_pos[i][1]
                     c = RGBtoHEX(self.led_data[i])
-                    canvas.create_rectangle(x, y, x+10, y+10, fill=c)
+                    canvas.create_rectangle(x, y, x+20, y+20, fill=c)
 
             canvas.pack()
             root.update()

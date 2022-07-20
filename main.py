@@ -1,5 +1,6 @@
-#import machine_email
-import settings
+from turtle import width
+import machine_email as email
+from settings import *
 import transactions
 import animatedGIF as ag
 from sys import platform
@@ -8,14 +9,18 @@ from threading import Thread
 from PIL import Image, ImageDraw, ImageFont
 import io
 
-VALVE_OPEN_TIME = 10
+VALVE_OPEN_TIME = 20
 NUM_PIXELS = 24
 FPS = 15
 FRAMETIME = 1 / FPS
 emulate = False
 idle = True # volatile
+image = None
+draw = None
+FONTSIZE = 20
 
-#font = ImageFont.truetype("DejaVuSans.ttf", 24)
+font1 = ImageFont.truetype("Daydream.ttf", FONTSIZE-8)
+font2 = ImageFont.truetype("Mario-Kart-DS.ttf", FONTSIZE)
 
 def is_raspberrypi():
     try:
@@ -69,12 +74,52 @@ else:
     emulate = True
 
 logo = ag.AnimatedGif(display)
+settings = Settings()
+PRICE = settings.price
 
 def check_for_drink():
-    
+    venmos = email.check_venmos()
+    for venmo in venmos:
+        if venmo["amount"] == PRICE:
+            show_purchase(venmo)
+            transactions.add_transaction(venmo)
+            dispense_drink()
+            time.sleep(1)
+
+def show_purchase(venmo):
+    draw.rectangle((0, 0, display.width, display.height), outline=0, fill=(0, 0, 0))
+    y = 2
+    x = 2
+    msg = '@'+venmo["Actor"]
+    draw.text((x, y), "paid", font=font2, fill="#15a815")
+    bbox = font1.getbbox(msg)
+    x = display.width - bbox[2] - 2
+    draw.text((x, y), msg, font=font1, fill="#00FF00")
+    y += bbox[3] + 4
+
+    x = 2
+
+    msg = '$'+str(venmo["Amount"])
+    draw.text((x, y), "amount", font=font2, fill="#1586a8")
+    bbox = font1.getbbox(msg)
+    x = display.width - bbox[2] - 2
+    draw.text((x, y), msg, font=font1, fill="#05c2fc")
+    y += bbox[3] + 4
+
+    x = 2
+
+    draw.text((x, y), "LET THE DELICIOUS", font=font2, fill="#914401")
+    y += FONTSIZE + 4
+    draw.text((x, y), "ROOT BEER FLOW!", font=font2, fill="#914401")
+    y += FONTSIZE + 4
+    draw.text((x, y), "make sure to close", font=font2, fill="#3802fc")
+    y += FONTSIZE + 4
+    draw.text((x, y), "the tap completely!", font=font2, fill="#FF00FF")
+    display.image(image)
+
 
 def start_idle():
-    global idle
+    global idle, t
     idle = True
     t = Thread(target=idle_animation)
     t.start()
@@ -96,7 +141,7 @@ def idle_animation():
             pixels.setPixelColor(i, wheel(pixel_index & 255))
         pixels.show()
         logo.postFrame()
-        j += 2
+        j += 3
         if j > 255:
             j = 0
 
@@ -111,8 +156,8 @@ def dispense_drink():
     for i in range(256): #change to number of LEDs in ring
         # animation: fill in the ring less and less as time runs out and fade from green to red 
         pixels.fill((i, 255 - i, 0)) # r, g, b
-        for i in range(i/255*NUM_PIXELS, NUM_PIXELS):
-            pixels.setPixelColor(i, 0, 0, 0)
+        for i in range(int((1-i/255)*NUM_PIXELS), NUM_PIXELS):
+            pixels.setPixelColor(i, (0, 0, 0))
         pixels.show()
         time.sleep(VALVE_OPEN_TIME / 255)
     close_valve()
@@ -139,16 +184,29 @@ def wheel(pos):
     return (r, g, b)
 
 def open_valve():
+    print("Valve open")
     return
 
 def close_valve():
+    print("Valve closed")
     return
 
 def main():
     display.begin()
     pixels.begin()
+
+    global image
+    image = Image.new("RGB", (display.width, display.height))
+    global draw
+    draw = ImageDraw.Draw(image)
+
     logo.preload("out.gif")
 
+    start_idle()
+    time.sleep(3)
+    stop_idle()
+    show_purchase({"Actor": "Test", "Amount": "1.00"})
+    dispense_drink()
     start_idle()
 
 if __name__ == '__main__':

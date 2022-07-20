@@ -6,7 +6,6 @@ lock = Lock()
 
 file = 'transactions.json'
 
-
 def get_transactions():
     try:
         with lock:
