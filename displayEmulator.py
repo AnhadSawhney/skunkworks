@@ -29,7 +29,10 @@ class DisplayEmulator:
         while self.keep_looping:
             if self.new_image_ready:
                 self.new_image_ready = False
-                im = ImageTk.PhotoImage(self.current_image) # THIS MUST BE SAVED AS ITS OWN VARIABLE OTHERWISE IT GETS GARBAGE COLLECTED BEFORE IT GETS TO THE SCREEN
+                try:
+                    im = ImageTk.PhotoImage(self.current_image) # THIS MUST BE SAVED AS ITS OWN VARIABLE OTHERWISE IT GETS GARBAGE COLLECTED BEFORE IT GETS TO THE SCREEN
+                except:
+                    continue
                 label.config(image=im)
                 label.pack()
                 root.update()

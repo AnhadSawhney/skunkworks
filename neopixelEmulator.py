@@ -81,7 +81,7 @@ class Neopixel_Emulator(object):
         #LEDsize = int( 20 / num ) + 10
         radius = int(self.numLEDs * 10)
 
-        self.led_data = [0 for i in range(self.numLEDs)]
+        self.led_data = [(0,0,0) for i in range(self.numLEDs)]
         
         #Position LEDs in a circle
         for i in range(self.numLEDs):
@@ -108,7 +108,7 @@ class Neopixel_Emulator(object):
                 for i in range(self.numLEDs):
                     x = self.led_pos[i][0]
                     y = self.led_pos[i][1]
-                    c = InttoHEX(self.led_data[i])
+                    c = RGBtoHEX(self.led_data[i])
                     canvas.create_rectangle(x, y, x+10, y+10, fill=c)
 
             canvas.pack()
@@ -142,8 +142,8 @@ class Neopixel_Emulator(object):
     def setPixelColor(self, n, color):
         """Set LED at position n to the provided 24-bit color value (in RGB order).
         """
-        if type(color) != int:
-            color = RGBtoInt(color[0], color[1], color[2])
+        #if type(color) == int:
+        #    color = IntToRGB(color[0], color[1], color[2])
         self.led_data[n] = color
 
     # add a fill method to fill the entire led data list with the given color
@@ -157,7 +157,7 @@ class Neopixel_Emulator(object):
         Each color component should be a value from 0 to 255 (where 0 is the
         lowest intensity and 255 is the highest intensity).
         """
-        self.setPixelColor(n, RGBtoInt(red, green, blue, white))
+        self.setPixelColor(n, (red, green, blue, white))
         
 
     def setBrightness(self, brightness):

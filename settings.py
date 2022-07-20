@@ -5,20 +5,19 @@ from sys import platform
 class Settings:
 
     defaults = {
-        'username': 'x',
-        'password': 'x',
         'email_address': 'x@gmail.com',
         'email_password': 'x',
         'imap_server': 'imap.gmail.com',
         'user_phrase': 'root beer',
-        'price': 2.0,
+        'price': 1.0,
         'venmo_user': '@AnhadS'
     }
     file = 'settings.json'
 
     def __init__(self):
-        if platform == 'linux':
-            self.file = '/home/pi/' + self.file
+        #if platform == 'linux':
+        #    self.file = '/home/pi/' + self.file
+        pass
 
     def _load(self):
         try:

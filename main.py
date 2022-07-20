@@ -3,14 +3,17 @@ import settings
 import transactions
 import animatedGIF as ag
 from sys import platform
-from time import sleep
+import time
 from threading import Thread
 from PIL import Image, ImageDraw, ImageFont
 import io
 
 VALVE_OPEN_TIME = 10
 NUM_PIXELS = 24
+FPS = 15
+FRAMETIME = 1 / FPS
 emulate = False
+idle = True # volatile
 
 #font = ImageFont.truetype("DejaVuSans.ttf", 24)
 
@@ -67,52 +70,41 @@ else:
 
 logo = ag.AnimatedGif(display)
 
-def main():
-    display.begin()
-    pixels.begin()
-    logo.preload("out.gif")
-    j = 0
-    while True:
-        pixels.fill(0)
-        pixels.setPixelColor(j, 0x00FF00)
-        pixels.show()
-        #print('loop')
-        logo.postFrame()
-        sleep(0.1)
-        j += 1
-        if j >= NUM_PIXELS:
-            j = 0
+def check_for_drink():
+    
 
-    #idle_animation()
-    #t = Thread(target=idle_animation)
-    #t.start()
-    #t.join()
+def start_idle():
+    global idle
+    idle = True
+    t = Thread(target=idle_animation)
+    t.start()
+    return
 
-# def test_display():
-#     if buttonA.value and buttonB.value:
-#         backlight.value = False  # turn off backlight
-#     else:
-#         backlight.value = True  # turn on backlight
-#     if buttonB.value and not buttonA.value:  # just button A pressed
-#         display.fill(color565(255, 0, 0))  # red
-#     if buttonA.value and not buttonB.value:  # just button B pressed
-#         display.fill(color565(0, 0, 255))  # blue
-#     if not buttonA.value and not buttonB.value:  # none pressed
-#         display.fill(color565(0, 255, 0))  # green
+def stop_idle():
+    global idle
+    idle = False
+    t.join()
+    return
 
 def idle_animation():
     j = 0
-    while True:
+    while idle:
+        start = time.monotonic()
         #print("Idle Animation Loop")
         for i in range(NUM_PIXELS):
             pixel_index = (i * 256 // NUM_PIXELS) + j
             pixels.setPixelColor(i, wheel(pixel_index & 255))
-        #pixels.show()
+        pixels.show()
         logo.postFrame()
-        sleep(0.1)
-        j += 1
+        j += 2
         if j > 255:
             j = 0
+
+        s = time.monotonic() - start
+        if s < FRAMETIME:
+            time.sleep(FRAMETIME - s)
+        else:
+            print("Frame time overloaded")
 
 def dispense_drink():
     open_valve()
@@ -122,7 +114,7 @@ def dispense_drink():
         for i in range(i/255*NUM_PIXELS, NUM_PIXELS):
             pixels.setPixelColor(i, 0, 0, 0)
         pixels.show()
-        sleep(VALVE_OPEN_TIME / 255)
+        time.sleep(VALVE_OPEN_TIME / 255)
     close_valve()
 
 def wheel(pos):
@@ -152,6 +144,13 @@ def open_valve():
 def close_valve():
     return
 
+def main():
+    display.begin()
+    pixels.begin()
+    logo.preload("out.gif")
+
+    start_idle()
+
 if __name__ == '__main__':
     main()
 
@@ -164,4 +163,4 @@ if __name__ == '__main__':
 #     while True:
 #         #print('loop')
 #         logo.postFrame()
-#         sleep(0.1)
+#         time.sleep(0.1)
