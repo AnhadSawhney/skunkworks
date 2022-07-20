@@ -11,7 +11,7 @@ import tkinter as tk
 import threading
 #import pygame
 
-def _from_rgb(rgb):
+def RGBtoHEX(rgb):
     """translates an rgb tuple of int to a tkinter friendly color code
     """
     r, g, b = rgb
@@ -71,22 +71,9 @@ class Neopixel_Emulator(object):
         self.height = 640
         self.width = 640
         self.keep_looping = True
+        self.new_data = False
 
         self.initialiseLEDCircle()
-
-        self.root = tk.Tk() #tk.Toplevel()
-        self.root.title('Neopixels')
-        self.root.geometry('{}x{}'.format(self.width, self.height))
-
-        # Used to manage how fast the screen updates
-        #self.clock = pygame.time.Clock()
-    
-        self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
-        self.canvas = tk.Canvas(self.root, height=self.height, width=self.width)
-        self.canvas.pack()
-        self.show()
-        self.t = threading.Thread(target=self.loop)
-        self.t.start()
         
     
     def initialiseLEDCircle(self):
@@ -105,14 +92,33 @@ class Neopixel_Emulator(object):
             #self.setPixelColorRGB(i, int(155 * i / self.numLEDs )+100,0,0)
 
     def loop(self):
+        root = tk.Tk() #tk.Toplevel()
+        root.title('Neopixels')
+        root.geometry('{}x{}'.format(self.width, self.height))
+    
+        root.protocol("WM_DELETE_WINDOW", self.on_closing)
+        canvas = tk.Canvas(root, height=self.height, width=self.width)
+        canvas.pack()
+        self.show()
+
         print("Neopixel Emulator Loop Start!")
         while self.keep_looping:
-            #self.show()
-            self.root.update()
+            if self.new_data:
+                self.new_data = False
+                for i in range(self.numLEDs):
+                    x = self.led_pos[i][0]
+                    y = self.led_pos[i][1]
+                    c = InttoHEX(self.led_data[i])
+                    canvas.create_rectangle(x, y, x+10, y+10, fill=c)
+
+            canvas.pack()
+            root.update()
+
             time.sleep(0.05)
+        
+        root.destroy()
 
     def on_closing(self):
-        self.root.destroy()
         self.keep_looping = False  
         #self.t.join() 
 
@@ -120,23 +126,14 @@ class Neopixel_Emulator(object):
         """Initialize library, must be called once before other functions are
         called.
         """
-        self.initialized = True        
+        self.initialized = True   
+        self.t = threading.Thread(target=self.loop)
+        self.t.start()     
 
     def show(self):
         """Update the display with the data from the LED buffer."""
         if self.initialized:
-            # Update the screen 
-            for i in range(self.numLEDs):
-                #pygame.draw.circle(self.screen, self.led_data[i], self.led_pos[i], 10)
-                x = self.led_pos[i][0]
-                y = self.led_pos[i][1]
-                self.canvas.create_rectangle(x, y, x+10, y+10, fill=InttoHEX(self.led_data[i]))
-
-            #print(self.led_data)
-
-            #pygame.display.flip()
-            self.canvas.pack()
-            self.root.update()
+            self.new_data = True
         else:
             #Throw error as begin method of class has not been called
             print("Error: Class begin method was not called")
@@ -145,7 +142,7 @@ class Neopixel_Emulator(object):
     def setPixelColor(self, n, color):
         """Set LED at position n to the provided 24-bit color value (in RGB order).
         """
-        if len(color) > 2:
+        if type(color) != int:
             color = RGBtoInt(color[0], color[1], color[2])
         self.led_data[n] = color
 
@@ -203,6 +200,9 @@ def main():
     
     # Intialize the library (must be called once before other functions).
     strip.begin()
+
+    strip.fill(RGBtoInt(255,0,0))
+    strip.show()
 
     # keepRunning = True
     # while keepRunning == True :

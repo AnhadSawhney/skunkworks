@@ -1,7 +1,7 @@
 #import machine_email
 import settings
 import transactions
-import animatedGIF
+import animatedGIF as ag
 from sys import platform
 from time import sleep
 from threading import Thread
@@ -61,16 +61,29 @@ else:
     #root.withdraw()
     import neopixelEmulator as ne
     pixels = ne.Neopixel_Emulator(NUM_PIXELS)
-    pixels.begin()
-    import displayEmulator
-    display = displayEmulator.DisplayEmulator()
+    import displayEmulator as de
+    display = de.DisplayEmulator()
     emulate = True
 
-logo = animatedGIF.AnimatedGif(display)
+logo = ag.AnimatedGif(display)
 
 def main():
+    display.begin()
+    pixels.begin()
     logo.preload("out.gif")
-    idle_animation()
+    j = 0
+    while True:
+        pixels.fill(0)
+        pixels.setPixelColor(j, 0x00FF00)
+        pixels.show()
+        #print('loop')
+        logo.postFrame()
+        sleep(0.1)
+        j += 1
+        if j >= NUM_PIXELS:
+            j = 0
+
+    #idle_animation()
     #t = Thread(target=idle_animation)
     #t.start()
     #t.join()
@@ -90,13 +103,14 @@ def main():
 def idle_animation():
     j = 0
     while True:
-        print("Idle Animation Loop")
+        #print("Idle Animation Loop")
         for i in range(NUM_PIXELS):
             pixel_index = (i * 256 // NUM_PIXELS) + j
             pixels.setPixelColor(i, wheel(pixel_index & 255))
-        pixels.show()
+        #pixels.show()
         logo.postFrame()
-        sleep(0.03)
+        sleep(0.1)
+        j += 1
         if j > 255:
             j = 0
 
@@ -140,3 +154,14 @@ def close_valve():
 
 if __name__ == '__main__':
     main()
+
+# if __name__ == '__main__':
+#     display = de.DisplayEmulator()
+#     display.begin()
+#     logo = ag.AnimatedGif(display)
+#     logo.preload("out.gif")
+
+#     while True:
+#         #print('loop')
+#         logo.postFrame()
+#         sleep(0.1)

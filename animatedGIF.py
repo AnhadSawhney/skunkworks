@@ -78,6 +78,7 @@ class AnimatedGif:
 
 if __name__ == '__main__':
     display = displayEmulator.DisplayEmulator()
+    display.begin()
     logo = AnimatedGif(display)
     logo.preload("out.gif")
 

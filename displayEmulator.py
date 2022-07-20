@@ -11,9 +11,11 @@ class DisplayEmulator:
         self.height = 135
         self.keep_looping = True
         self.new_image_ready = False
+        self.current_image = None
+    
+    def begin(self):
         self.t = threading.Thread(target=self.loop)
         self.t.start()
-        self.current_image = None
 
     def loop(self):
         print("Display Emulator Loop Start!")
@@ -35,12 +37,13 @@ class DisplayEmulator:
             #self.root.update()
             time.sleep(0.05)
 
+        root.destroy()
+
     def image(self, frame):
         self.current_image = frame
         self.new_image_ready = True
 
     def on_closing(self): 
-        self.root.destroy()
         self.keep_looping = False 
         #self.t.join()
 
