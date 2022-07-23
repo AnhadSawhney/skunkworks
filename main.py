@@ -17,6 +17,7 @@ image = None
 draw = None
 FONTSIZE = 20
 valve = None
+emulate = False
 
 font1 = ImageFont.truetype("Daydream.ttf", FONTSIZE-8)
 font2 = ImageFont.truetype("Mario-Kart-DS.ttf", FONTSIZE)
@@ -87,6 +88,10 @@ else:
     pixels = ne.Neopixel_Emulator(NUM_PIXELS)
     import displayEmulator as de
     display = de.DisplayEmulator()
+    display.begin()
+    pixels.begin()
+    emulate = True
+
 
 logo = ag.AnimatedGif(display)
 settings = Settings()
@@ -144,7 +149,10 @@ def idle_animation():
         #print("Idle Animation Loop")
         for i in range(NUM_PIXELS):
             pixel_index = (i * 256 // NUM_PIXELS) + j
-            pixels.setPixelColor(i, wheel(pixel_index & 255))
+            if emulate:
+                pixels.setPixelColor(i, wheel(pixel_index & 255))
+            else:
+                pixels[i] = wheel(pixel_index & 255)
         pixels.show()
         logo.postFrame()
         j += 3
@@ -163,7 +171,10 @@ def dispense_drink():
         # animation: fill in the ring less and less as time runs out and fade from green to red 
         pixels.fill((i, 255 - i, 0)) # r, g, b
         for i in range(int((1-i/255)*NUM_PIXELS), NUM_PIXELS):
-            pixels.setPixelColor(i, (0, 0, 0))
+            if emulate:
+                pixels.setPixelColor(i, (0, 0, 0))
+            else:
+                pixels[i] = (0, 0, 0)
         pixels.show()
         time.sleep(VALVE_OPEN_TIME / 255)
     close_valve()
@@ -190,9 +201,6 @@ def wheel(pos):
     return (r, g, b)
 
 def main():
-    display.begin()
-    pixels.begin()
-
     global image
     image = Image.new("RGB", (display.width, display.height))
     global draw
