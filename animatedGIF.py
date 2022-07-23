@@ -52,7 +52,7 @@ class AnimatedGif:
             #    color=(0, 0, 0),
             #    centering=(0.5, 0.5),
             #)
-            frameobject.image = image.copy() #image.convert("RGB")
+            frameobject.image = image.convert("RGB")
             #frameobject.image.show()
             self.frames.append(frameobject)
 
@@ -62,7 +62,7 @@ class AnimatedGif:
         while True:
             for frameobject in self.frames:
                 starttime = time.monotonic()
-                self.display.image(frameobject.image.convert("RGB"))
+                self.display.image(frameobject.image)
                 while time.monotonic() < (starttime + frameobject.duration / 1000):
                     pass
 
