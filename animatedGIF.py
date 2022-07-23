@@ -49,17 +49,17 @@ class AnimatedGif:
                 frameobject.duration = image.info["duration"]
 
             f = image.convert("RGB")
-            if self.rotation == 90:
-                f = f.transpose(Image.ROTATE_90)
+#            if self.rotation % 180 == 90:
+#                f = f.transpose(Image.ROTATE_90)
 
             frameobject.image = ImageOps.pad(  # pylint: disable=no-member
                 f,
-                (self.width, self.height),
+                ((self.width, self.height) if self.rotation % 180 == 0 else (self.height, self.width)),
                 method=Image.Resampling.NEAREST,
                 color=(0, 0, 0),
                 centering=(0.5, 0.5),
             )
-            
+
             self.frames.append(frameobject)
 
     def play(self):
