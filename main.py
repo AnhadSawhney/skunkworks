@@ -1,4 +1,3 @@
-from turtle import width
 import machine_email as email
 from settings import *
 import transactions
@@ -10,14 +9,14 @@ from PIL import Image, ImageDraw, ImageFont
 import io
 
 VALVE_OPEN_TIME = 20
-NUM_PIXELS = 24
+NUM_PIXELS = 16
 FPS = 15
 FRAMETIME = 1 / FPS
-emulate = False
 idle = True # volatile
 image = None
 draw = None
 FONTSIZE = 20
+valve = None
 
 font1 = ImageFont.truetype("Daydream.ttf", FONTSIZE-8)
 font2 = ImageFont.truetype("Mario-Kart-DS.ttf", FONTSIZE)
@@ -29,13 +28,28 @@ def is_raspberrypi():
     except Exception: pass
     return False
 
+def open_valve():
+    print("Valve open")
+    global valve
+    if valve is not None:
+        valve.value = True
+    return
+
+def close_valve():
+    print("Valve closed")
+    global valve
+    if valve is not None:
+        valve.value = False
+    return
+
 if is_raspberrypi():
+    print("Initializing Raspberry Pi")
     import board
     import neopixel
     import digitalio
     from adafruit_rgb_display.rgb import color565
     from adafruit_rgb_display import st7789
-    pixels = neopixel.NeoPixel(board.D18, NUM_PIXELS)
+    pixels = neopixel.NeoPixel(board.D21, NUM_PIXELS)
 
 
     # Configuration for CS and DC pins for Raspberry Pi
@@ -63,28 +77,20 @@ if is_raspberrypi():
     buttonB = digitalio.DigitalInOut(board.D24)
     buttonA.switch_to_input()
     buttonB.switch_to_input()
+
+    valve = digitalio.DigitalInOut(board.D20)
+    valve.switch_to_output()
+    close_valve()
 else:
-    #import tkinter as tk
-    #root = tk.Tk()
-    #root.withdraw()
+    print("Initializing Emulation")
     import neopixelEmulator as ne
     pixels = ne.Neopixel_Emulator(NUM_PIXELS)
     import displayEmulator as de
     display = de.DisplayEmulator()
-    emulate = True
 
 logo = ag.AnimatedGif(display)
 settings = Settings()
 PRICE = settings.price
-
-def check_for_drink():
-    venmos = email.check_venmos()
-    for venmo in venmos:
-        if venmo["amount"] == PRICE:
-            show_purchase(venmo)
-            transactions.add_transaction(venmo)
-            dispense_drink()
-            time.sleep(1)
 
 def show_purchase(venmo):
     draw.rectangle((0, 0, display.width, display.height), outline=0, fill=(0, 0, 0))
@@ -183,14 +189,6 @@ def wheel(pos):
         b = int(255 - pos * 3)
     return (r, g, b)
 
-def open_valve():
-    print("Valve open")
-    return
-
-def close_valve():
-    print("Valve closed")
-    return
-
 def main():
     display.begin()
     pixels.begin()
@@ -203,22 +201,20 @@ def main():
     logo.preload("out.gif")
 
     start_idle()
-    time.sleep(3)
-    stop_idle()
-    show_purchase({"Actor": "Test", "Amount": "1.00"})
-    dispense_drink()
-    start_idle()
+    while True:
+        venmos = email.check_venmos()
+        if len(venmos) > 0:
+            stop_idle()
+            for venmo in venmos:
+                if venmo["amount"] == PRICE:
+                    show_purchase(venmo)
+                    transactions.add_transaction(venmo)
+                    dispense_drink()
+                    time.sleep(1)
+            start_idle()
+
+        time.sleep(1)
+        
 
 if __name__ == '__main__':
     main()
-
-# if __name__ == '__main__':
-#     display = de.DisplayEmulator()
-#     display.begin()
-#     logo = ag.AnimatedGif(display)
-#     logo.preload("out.gif")
-
-#     while True:
-#         #print('loop')
-#         logo.postFrame()
-#         time.sleep(0.1)
