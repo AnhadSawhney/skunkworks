@@ -42,7 +42,7 @@ class DisplayEmulator:
 
         root.destroy()
 
-    def image(self, frame):
+    def image(self, frame, rotation):
         self.current_image = frame
         self.new_image_ready = True
 

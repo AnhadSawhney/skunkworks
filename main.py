@@ -82,6 +82,7 @@ if is_raspberrypi():
     valve = digitalio.DigitalInOut(board.D20)
     valve.switch_to_output()
     close_valve()
+    rotation = 90
 else:
     print("Initializing Emulation")
     import neopixelEmulator as ne
@@ -91,9 +92,10 @@ else:
     display.begin()
     pixels.begin()
     emulate = True
+    rotation = 0
 
 
-logo = ag.AnimatedGif(display)
+logo = ag.AnimatedGif(display, rotation)
 settings = Settings()
 PRICE = settings.price
 
@@ -126,7 +128,7 @@ def show_purchase(venmo):
     draw.text((x, y), "make sure to close", font=font2, fill="#3802fc")
     y += FONTSIZE + 4
     draw.text((x, y), "the tap completely!", font=font2, fill="#FF00FF")
-    display.image(image)
+    display.image(image, rotation)
 
 
 def start_idle():
