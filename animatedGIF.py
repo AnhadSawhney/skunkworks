@@ -1,7 +1,6 @@
 from PIL import Image, ImageOps
 import os
 import time
-import displayEmulator
 
 class Frame:
     def __init__(self, duration=0):
@@ -77,6 +76,7 @@ class AnimatedGif:
         return frame.duration
 
 if __name__ == '__main__':
+    import displayEmulator
     display = displayEmulator.DisplayEmulator()
     display.begin()
     logo = AnimatedGif(display)
