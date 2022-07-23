@@ -28,7 +28,7 @@ class AnimatedGif:
 
     def preload(self, file):
         image = Image.open(file)
-        print("Loading {}...".format(file))
+        print("Loading {}".format(file))
         if "duration" in image.info:
             self.duration = image.info["duration"]
         else:
@@ -40,7 +40,7 @@ class AnimatedGif:
         self.framecount = image.n_frames
         self.frames.clear()
         for i in range(self.framecount):
-            print("Loading frame {}...".format(i))
+            print("Loading frame {}".format(i))
             image.seek(i)
             # Create blank image for drawing.
             # Make sure to create image with mode 'RGB' for full color.

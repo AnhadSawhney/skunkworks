@@ -10,7 +10,7 @@ import io
 
 VALVE_OPEN_TIME = 20
 NUM_PIXELS = 16
-FPS = 10
+FPS = 8
 FRAMETIME = 1 / FPS
 idle = True # volatile
 image = None
@@ -165,7 +165,7 @@ def idle_animation():
         if s < FRAMETIME:
             time.sleep(FRAMETIME - s)
         else:
-            print("Frame time overloaded! Took:" + str(FRAMETIME - s) + " sec")
+            print("Frame time overloaded! Took:" + str(s) + " sec")
 
 def dispense_drink():
     open_valve()
