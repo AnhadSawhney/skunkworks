@@ -50,7 +50,7 @@ if is_raspberrypi():
     import digitalio
     from adafruit_rgb_display.rgb import color565
     from adafruit_rgb_display import st7789
-    pixels = neopixel.NeoPixel(board.D21, NUM_PIXELS)
+    pixels = neopixel.NeoPixel(board.D21, NUM_PIXELS, brightness = 0.2)
 
 
     # Configuration for CS and DC pins for Raspberry Pi

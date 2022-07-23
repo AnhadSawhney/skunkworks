@@ -62,7 +62,7 @@ class AnimatedGif:
         while True:
             for frameobject in self.frames:
                 starttime = time.monotonic()
-                self.display.image(frameobject.image)
+                self.display.image(frameobject.image.convert("RGB"))
                 while time.monotonic() < (starttime + frameobject.duration / 1000):
                     pass
 
