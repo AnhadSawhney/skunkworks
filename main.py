@@ -161,14 +161,17 @@ def idle_animation():
     j = 0
     while idle:
         start = time.monotonic()
-        rainbow(j)
-        j += 2
         logo.postFrame()
         rainbow(j)
-        j += 2
+        j += 1
+        rainbow(j)
+        j += 1
+        rainbow(j)
+        j += 1
+        rainbow(j)
+        j += 1
         if j > 255:
             j = 0
-
         s = time.monotonic() - start
         if s < FRAMETIME:
             time.sleep(FRAMETIME - s)
@@ -195,6 +198,9 @@ def dispense_drink():
         pixels.show()
         time.sleep(VALVE_OPEN_TIME / 255)
     close_valve()
+    pixels.fill((0, 0, 0))
+    pixels.show()
+    time.sleep(0.5)
 
 def wheel(pos):
     # Input a value 0 to 255 to get a color value.
