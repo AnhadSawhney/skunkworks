@@ -10,7 +10,7 @@ import io
 
 VALVE_OPEN_TIME = 20
 NUM_PIXELS = 16
-FPS = 8
+FPS = 7
 FRAMETIME = 1 / FPS
 idle = True # volatile
 image = None
@@ -50,7 +50,7 @@ if is_raspberrypi():
     import digitalio
     from adafruit_rgb_display.rgb import color565
     from adafruit_rgb_display import st7789
-    pixels = neopixel.NeoPixel(board.D21, NUM_PIXELS, brightness = 0.1)
+    pixels = neopixel.NeoPixel(board.D21, NUM_PIXELS, brightness = 0.05)
 
 
     # Configuration for CS and DC pins for Raspberry Pi
@@ -83,6 +83,8 @@ if is_raspberrypi():
     valve.switch_to_output()
     close_valve()
     rotation = 90
+    WIDTH = display.height
+    HEIGHT = display.width
 else:
     print("Initializing Emulation")
     import neopixelEmulator as ne
@@ -93,6 +95,8 @@ else:
     pixels.begin()
     emulate = True
     rotation = 0
+    WIDTH = display.width
+    HEIGHT = display.height
 
 
 logo = ag.AnimatedGif(display, rotation)
@@ -100,13 +104,13 @@ settings = Settings()
 PRICE = settings.price
 
 def show_purchase(venmo):
-    draw.rectangle((0, 0, display.width, display.height), outline=0, fill=(0, 0, 0))
+    draw.rectangle((0, 0, WIDTH, HEIGHT), outline=0, fill=(0, 0, 0))
     y = 2
     x = 2
     msg = '@'+venmo["Actor"]
     draw.text((x, y), "paid", font=font2, fill="#15a815")
     bbox = font1.getbbox(msg)
-    x = display.width - bbox[2] - 2
+    x = WIDTH - bbox[2] - 2
     draw.text((x, y), msg, font=font1, fill="#00FF00")
     y += bbox[3] + 4
 
@@ -115,13 +119,13 @@ def show_purchase(venmo):
     msg = '$'+str(venmo["Amount"])
     draw.text((x, y), "amount", font=font2, fill="#1586a8")
     bbox = font1.getbbox(msg)
-    x = display.width - bbox[2] - 2
+    x = WIDTH - bbox[2] - 2
     draw.text((x, y), msg, font=font1, fill="#05c2fc")
     y += bbox[3] + 4
 
     x = 2
 
-    draw.text((x, y), "LET THE DELICIOUS", font=font2, fill="#914401")
+    draw.text((x, y), "LET THE", font=font2, fill="#914401")
     y += FONTSIZE + 4
     draw.text((x, y), "ROOT BEER FLOW!", font=font2, fill="#914401")
     y += FONTSIZE + 4
@@ -211,7 +215,7 @@ def wheel(pos):
 
 def main():
     global image
-    image = Image.new("RGB", (display.width, display.height))
+    image = Image.new("RGB", (WIDTH, HEIGHT))
     global draw
     draw = ImageDraw.Draw(image)
 
