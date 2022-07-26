@@ -10,7 +10,8 @@ class Settings:
         'imap_server': 'imap.gmail.com',
         'user_phrase': 'root beer',
         'price': 1.0,
-        'venmo_user': '@AnhadS'
+        'venmo_user': '@AnhadS',
+        'valve_open_time': 20
     }
     file = 'settings.json'
 

@@ -2,13 +2,15 @@ import machine_email as email
 from settings import *
 import transactions
 import animatedGIF as ag
-from sys import platform
+import sys, os
 import time
 from threading import Thread
 from PIL import Image, ImageDraw, ImageFont
 import io
 
-VALVE_OPEN_TIME = 20
+# append current working directory to path
+sys.path.append(os.getcwd())
+
 NUM_PIXELS = 16
 FPS = 7
 FRAMETIME = 1 / FPS
@@ -98,10 +100,10 @@ else:
     WIDTH = display.width
     HEIGHT = display.height
 
-
 logo = ag.AnimatedGif(display, rotation)
 settings = Settings()
 PRICE = settings.price
+VALVE_OPEN_TIME = settings.valve_open_time
 
 def show_purchase(venmo):
     draw.rectangle((0, 0, WIDTH, HEIGHT), outline=0, fill=(0, 0, 0))
