@@ -50,7 +50,7 @@ if is_raspberrypi():
     import digitalio
     from adafruit_rgb_display.rgb import color565
     from adafruit_rgb_display import st7789
-    pixels = neopixel.NeoPixel(board.D21, NUM_PIXELS, brightness = 0.2)
+    pixels = neopixel.NeoPixel(board.D21, NUM_PIXELS, brightness = 0.1)
 
 
     # Configuration for CS and DC pins for Raspberry Pi
@@ -168,6 +168,13 @@ def idle_animation():
             print("Frame time overloaded! Took:" + str(s) + " sec")
 
 def dispense_drink():
+    for i in range(2):
+        pixels.fill((255, 255, 255))
+        pixels.show()
+        time.sleep(0.5)
+        pixels.fill((0, 0, 0))
+        pixels.show()
+        time.sleep(0.5)
     open_valve()
     for i in range(256): #change to number of LEDs in ring
         # animation: fill in the ring less and less as time runs out and fade from green to red 
@@ -216,7 +223,7 @@ def main():
         if len(venmos) > 0:
             stop_idle()
             for venmo in venmos:
-                if venmo["amount"] == PRICE:
+                if venmo["Amount"] == PRICE:
                     show_purchase(venmo)
                     transactions.add_transaction(venmo)
                     dispense_drink()
