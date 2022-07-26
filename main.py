@@ -50,7 +50,7 @@ if is_raspberrypi():
     import digitalio
     from adafruit_rgb_display.rgb import color565
     from adafruit_rgb_display import st7789
-    pixels = neopixel.NeoPixel(board.D21, NUM_PIXELS, brightness = 0.05)
+    pixels = neopixel.NeoPixel(board.D21, NUM_PIXELS, brightness = 0.05, auto_write = False)
 
 
     # Configuration for CS and DC pins for Raspberry Pi
@@ -149,10 +149,7 @@ def stop_idle():
     return
 
 def idle_animation():
-    j = 0
-    while idle:
-        start = time.monotonic()
-        #print("Idle Animation Loop")
+    def rainbow(j):
         for i in range(NUM_PIXELS):
             pixel_index = (i * 256 // NUM_PIXELS) + j
             if emulate:
@@ -160,8 +157,15 @@ def idle_animation():
             else:
                 pixels[i] = wheel(pixel_index & 255)
         pixels.show()
+
+    j = 0
+    while idle:
+        start = time.monotonic()
+        rainbow(j)
+        j += 2
         logo.postFrame()
-        j += 3
+        rainbow(j)
+        j += 2
         if j > 255:
             j = 0
 
@@ -180,10 +184,10 @@ def dispense_drink():
         pixels.show()
         time.sleep(0.5)
     open_valve()
-    for i in range(256): #change to number of LEDs in ring
+    for i in range(256):
         # animation: fill in the ring less and less as time runs out and fade from green to red 
         pixels.fill((i, 255 - i, 0)) # r, g, b
-        for i in range(int((1-i/255)*NUM_PIXELS), NUM_PIXELS):
+        for i in range(int((1-i/255)*NUM_PIXELS)+1, NUM_PIXELS):
             if emulate:
                 pixels.setPixelColor(i, (0, 0, 0))
             else:
