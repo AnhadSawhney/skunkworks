@@ -1,7 +1,6 @@
 from json import dumps, loads
 from sys import platform
 
-
 class Settings:
 
     defaults = {

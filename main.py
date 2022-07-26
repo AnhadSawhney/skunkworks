@@ -1,15 +1,14 @@
+import sys, os
+sys.path.append(os.getcwd())
+
 import machine_email as email
 from settings import *
 import transactions
 import animatedGIF as ag
-import sys, os
 import time
 from threading import Thread
 from PIL import Image, ImageDraw, ImageFont
 import io
-
-# append current working directory to path
-sys.path.append(os.getcwd())
 
 NUM_PIXELS = 16
 FPS = 7
