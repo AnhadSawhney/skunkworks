@@ -10,7 +10,8 @@ class Settings:
         'user_phrase': 'root beer',
         'price': 1.0,
         'venmo_user': '@AnhadS',
-        'valve_open_time': 10
+        'valve_open_time': 10,
+        'led_brightness': 0.05
     }
     file = 'settings.json'
 

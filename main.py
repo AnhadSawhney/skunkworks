@@ -25,6 +25,11 @@ font1 = ImageFont.truetype("fonts/Daydream.ttf", FONTSIZE-8)
 font2 = ImageFont.truetype("fonts/Mario-Kart-DS.ttf", FONTSIZE)
 font3 = ImageFont.truetype("fonts/Stencilia-A.ttf", FONTSIZE + 10)
 
+settings = Settings()
+PRICE = settings.price
+VALVE_OPEN_TIME = settings.valve_open_time
+VENMO_USER = settings.venmo_user
+
 def is_raspberrypi():
     try:
         with io.open('/sys/firmware/devicetree/base/model', 'r') as m:
@@ -53,7 +58,7 @@ if is_raspberrypi():
     import digitalio
     from adafruit_rgb_display.rgb import color565
     from adafruit_rgb_display import st7789
-    pixels = neopixel.NeoPixel(board.D21, NUM_PIXELS, brightness = 0.05, auto_write = False)
+    pixels = neopixel.NeoPixel(board.D21, NUM_PIXELS, brightness = settings.led_brightness, auto_write = False)
 
 
     # Configuration for CS and DC pins for Raspberry Pi
@@ -102,9 +107,6 @@ else:
     HEIGHT = display.height
 
 logo = ag.AnimatedGif(display, rotation)
-settings = Settings()
-PRICE = settings.price
-VALVE_OPEN_TIME = settings.valve_open_time
 
 def show_purchase(venmo):
     draw.rectangle((0, 0, WIDTH, HEIGHT), outline=0, fill=(0, 0, 0))
@@ -138,7 +140,7 @@ def show_purchase(venmo):
     display.image(image, rotation)
 
 def show_instructions():
-    draw.rectangle((0, 0, display.width, display.height), outline=0, fill=(0, 0, 0))
+    draw.rectangle((0, 0, WIDTH, HEIGHT), outline=0, fill=(0, 0, 0))
     y = 2
     x = 2
     msg = 'Send me ${:,.2f}'.format(PRICE)
@@ -148,19 +150,14 @@ def show_instructions():
 
     x = 2
 
-    msg = '@AnhadS'
+    msg = VENMO_USER
     draw.text((x, y), "Venmo:", font=font3, fill="#1586a8")
     bbox = font1.getbbox(msg)
-    x = display.width - bbox[2]*2
+    x = WIDTH - bbox[2] * 2
     y += FONTSIZE * 2 + 4
     draw.text((x, y), msg, font=font3, fill="#05c2fc")
     y += bbox[3] + 4
 
-    #x = 2
-
-    #draw.text((x, y), "Open the tap", font=font3, fill="#914401")
-    #y += FONTSIZE + 4
-    #draw.text((x, y), "the timer starts", font=font3, fill="#914401")
     display.image(image, rotation)
 
 def start_idle():
