@@ -10,6 +10,7 @@ from threading import Thread
 from PIL import Image, ImageDraw, ImageFont
 import io
 
+INSTRUCTIONS_TIME = 5
 NUM_PIXELS = 16
 FPS = 7
 FRAMETIME = 1 / FPS
@@ -20,8 +21,9 @@ FONTSIZE = 20
 valve = None
 emulate = False
 
-font1 = ImageFont.truetype("Daydream.ttf", FONTSIZE-8)
-font2 = ImageFont.truetype("Mario-Kart-DS.ttf", FONTSIZE)
+font1 = ImageFont.truetype("fonts/Daydream.ttf", FONTSIZE-8)
+font2 = ImageFont.truetype("fonts/Mario-Kart-DS.ttf", FONTSIZE)
+font3 = ImageFont.truetype("fonts/Stencilia-A.ttf", FONTSIZE + 10)
 
 def is_raspberrypi():
     try:
@@ -117,7 +119,7 @@ def show_purchase(venmo):
 
     x = 2
 
-    msg = '$'+str(venmo["Amount"])
+    msg = '${:,.2f}'.format(venmo["Amount"])
     draw.text((x, y), "amount", font=font2, fill="#1586a8")
     bbox = font1.getbbox(msg)
     x = WIDTH - bbox[2] - 2
@@ -135,6 +137,31 @@ def show_purchase(venmo):
     draw.text((x, y), "the tap completely!", font=font2, fill="#FF00FF")
     display.image(image, rotation)
 
+def show_instructions():
+    draw.rectangle((0, 0, display.width, display.height), outline=0, fill=(0, 0, 0))
+    y = 2
+    x = 2
+    msg = 'Send me ${:,.2f}'.format(PRICE)
+    bbox = font1.getbbox(msg)
+    draw.text((x, y), msg, font=font3, fill="#00FF00")
+    y += FONTSIZE * 2 + 4
+
+    x = 2
+
+    msg = '@AnhadS'
+    draw.text((x, y), "Venmo:", font=font3, fill="#1586a8")
+    bbox = font1.getbbox(msg)
+    x = display.width - bbox[2]*2
+    y += FONTSIZE * 2 + 4
+    draw.text((x, y), msg, font=font3, fill="#05c2fc")
+    y += bbox[3] + 4
+
+    #x = 2
+
+    #draw.text((x, y), "Open the tap", font=font3, fill="#914401")
+    #y += FONTSIZE + 4
+    #draw.text((x, y), "the timer starts", font=font3, fill="#914401")
+    display.image(image, rotation)
 
 def start_idle():
     global idle, t
@@ -158,11 +185,13 @@ def idle_animation():
             else:
                 pixels[i] = wheel(pixel_index & 255)
         pixels.show()
-
+    
     j = 0
+    frame_loop = 0
+    instructions_delta_t = 0
+    instructions_start = 0
     while idle:
         start = time.monotonic()
-        logo.postFrame()
         rainbow(j)
         j += 1
         rainbow(j)
@@ -173,11 +202,24 @@ def idle_animation():
         j += 1
         if j > 255:
             j = 0
-        s = time.monotonic() - start
-        if s < FRAMETIME:
-            time.sleep(FRAMETIME - s)
+
+        if frame_loop:
+            if instructions_delta_t == 0:
+                show_instructions()
+                instructions_start = time.monotonic()
+            instructions_delta_t = time.monotonic() - instructions_start
+            
+            if instructions_delta_t > INSTRUCTIONS_TIME:
+                frame_loop = False
+                instructions_delta_t = 0
         else:
-            print("Frame time overloaded! Took:" + str(s) + " sec")
+            frame_loop = logo.postFrame()
+            
+        delta_t = time.monotonic() - start
+        if delta_t < FRAMETIME:
+            time.sleep(FRAMETIME - delta_t)
+        else:
+            print("Frame time overloaded! Took:" + str(delta_t) + " sec")
 
 def dispense_drink():
     for i in range(2):

@@ -78,8 +78,9 @@ class AnimatedGif:
         self.index += 1
         if self.index >= self.framecount:
             self.index = 0
+            return True # looped
 
-        return frame.duration
+        return False #frame.duration
 
 if __name__ == '__main__':
     import displayEmulator

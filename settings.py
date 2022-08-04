@@ -10,7 +10,7 @@ class Settings:
         'user_phrase': 'root beer',
         'price': 1.0,
         'venmo_user': '@AnhadS',
-        'valve_open_time': 20
+        'valve_open_time': 10
     }
     file = 'settings.json'
 
